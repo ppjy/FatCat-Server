@@ -68,30 +68,14 @@ HEADERS += \
 
 
 
-#INCLUDEPATH += /home/hf02/soft/boost_1_58_0
-#INCLUDEPATH += /home/hf02/soft/threadpool-0_2_5-src/threadpool
+INCLUDEPATH += /home/hf02/soft/boost_1_58_0
+INCLUDEPATH += /home/hf02/soft/threadpool-0_2_5-src/threadpool
 
 
-#LIBS+= /home/hf02/soft/hiredis-master/libhiredis.a
-#LIBS += /usr/lib64/libpq.so
-#LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_system.a
-#LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_thread.a
-#LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_log.a
-
-#QMAKE_LFLAGS += -pthread
-
-INCLUDEPATH += /usr/local/include/hiredis
-INCLUDEPATH += /opt/PostgreSQL/9.2/include
-
-INCLUDEPATH += /home/junrui/yangWork/boost_1_58_0
-INCLUDEPATH += /home/junrui/yangWork/threadpool
-
-LIBS += /opt/PostgreSQL/9.2/lib/libpq.so
-LIBS+= /usr/local/include/hiredis/libhiredis.so
-#LIBS += /opt/PostgreSQL/9.2/lib/libpq.so.5
-
-LIBS += /home/junrui/yangWork/boost_1_58_0/stage/lib/libboost_log.a
-LIBS += /home/junrui/yangWork/boost_1_58_0/stage/lib/libboost_system.a
-LIBS += /home/junrui/yangWork/boost_1_58_0/stage/lib/libboost_thread.a
+LIBS+= /home/hf02/soft/hiredis-master/libhiredis.a
+LIBS += /usr/lib64/libpq.so
+LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_system.a
+LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_thread.a
+LIBS += /home/hf02/soft/boost_1_58_0/stage/lib/libboost_log.a
 
 QMAKE_LFLAGS += -pthread

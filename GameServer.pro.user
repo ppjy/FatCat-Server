@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<<<<<<< HEAD
-<!-- Written by QtCreator 3.3.1, 2015-09-08T12:32:40. -->
-=======
-<!-- Written by QtCreator 3.3.0, 2015-09-07T18:01:05. -->
->>>>>>> 1de21931b98f335447116a0f149621d5924d917b
+<!-- Written by QtCreator 3.3.1, 2015-09-08T17:29:08. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -241,13 +237,8 @@
     <value type="int" key="PE.EnvironmentAspect.Base">2</value>
     <valuelist type="QVariantList" key="PE.EnvironmentAspect.Changes"/>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DefaultDisplayName">GameServer</value>
-<<<<<<< HEAD
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName"></value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/junrui/桌面/gitServer/FatCat-Server/GameServer.pro</value>
-=======
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">GameServer2</value>
-    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/hf02/Qt/FatCat-Server/GameServer.pro</value>
->>>>>>> 1de21931b98f335447116a0f149621d5924d917b
+    <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">Qt4ProjectManager.Qt4RunConfiguration:/home/junrui/桌面/gitYang/FatCat-Server/GameServer.pro</value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.CommandLineArguments"></value>
     <value type="QString" key="Qt4ProjectManager.Qt4RunConfiguration.ProFile">GameServer.pro</value>
     <value type="bool" key="Qt4ProjectManager.Qt4RunConfiguration.UseDyldImageSuffix">false</value>

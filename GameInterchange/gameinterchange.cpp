@@ -447,11 +447,11 @@ void GameInterchange::operProCheckChange(TCPConnection::Pointer conn,  interchan
     GameTask* t_task = srv->GetGameTask();
     for(auto iter = interchange->changes.begin(); iter != interchange->changes.end();++iter)
     {
-          t_task->UpdateCollectGoodsTaskProcess(conn,iter->GoodsID,iter->TypeID);
+          t_task->UpdateCollectGoodsTaskProcess(conn,iter->TypeID);
     }
     for(auto iter = pInterchange->changes.begin(); iter != pInterchange->changes.end();++iter)
     {
-          t_task->UpdateCollectGoodsTaskProcess(conn,iter->GoodsID,iter->TypeID);
+          t_task->UpdateCollectGoodsTaskProcess(conn,iter->TypeID);
     }
 
     interchange->clear();                          //交易完毕 恢复到原来状态
