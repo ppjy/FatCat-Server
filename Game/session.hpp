@@ -14,14 +14,6 @@
 #include "Game/log.hpp"
 #include "Game/cmdtypes.h"
 
-//位置的状态，0 空闲，1使用，2锁定
-#define  POS_EMPTY    0     //位置为空
-#define  POS_NONEMPTY 1     //位置非空
-#define  POS_LOCKED   2     //位置锁定
-
-#define  BAGCAPACITY          65             //背包容量
-#define  GOODSMAXCOUNT        99              //每个格子物品最大数量
-
 using boost::asio::ip::tcp;
 
 class Interchange
@@ -91,18 +83,20 @@ public:
         ,m_viewMonster(new _umap_monsterBasicInfo)
         ,m_skillTime(new _umap_skillTime)
         ,m_playerGoods(new _umap_roleGoods)
-        ,m_playerEquAttr(new _umap_roleEqu)
+        ,m_playerEqu(new _umap_roleEqu)
+//        ,m_playerEquAttr(new _umap_roleEquAttr)
         ,m_playerMoney(new _umap_roleMoney)
         ,m_lootGoods(new _umap_lootGoods)
         ,m_lootPosition(new _umap_lootPosition)
         ,m_interchage(new Interchange)
+        ,m_taskGoods( new _umap_taskGoods)
     {
         m_publicCoolTime = 0;
         memset(m_goodsPosition, 0, BAGCAPACITY);
         m_skillUseTime = 0;
         m_roleid = 0;
         m_usrid.assign(0);
-
+        m_nick.assign(0);
     }
 
     ~Session()
@@ -125,15 +119,18 @@ public:
     umap_roleSock           m_viewRole;          //可视范围内的玩家
     umap_monsterBasicInfo   m_viewMonster;       //可视范围内的怪物
     umap_skillTime          m_skillTime;         //保存玩家所有技能的再次使用时间
-    umap_roleGoods          m_playerGoods;       //玩家物品
-    umap_roleEqu            m_playerEquAttr;     //玩家装备属性
+    umap_roleGoods          m_playerGoods;       //玩家背包其他物品
+    umap_roleEqu            m_playerEqu;         //玩家背包装备
+//    umap_roleEquAttr        m_playerEquAttr;     //玩家背包装备属性
     umap_roleMoney          m_playerMoney;       //玩家金币
-    STR_PackPlayerPosition      m_position;          //位置
+    STR_PackPlayerPosition  m_position;          //位置
     umap_lootGoods          m_lootGoods;         //掉落物品
     umap_lootPosition       m_lootPosition;      //掉落物品位置，时间
     boost::shared_ptr<Interchange> m_interchage;
     hf_char                 m_goodsPosition[BAGCAPACITY];   //保存玩家物品位置
-    PlayerStartPos          m_StartPos;          //保存玩家刷新数据起始点
+    STR_PlayerStartPos      m_StartPos;          //保存玩家刷新数据起始点
+    umap_taskGoods          m_taskGoods;         //保存玩家任务物品
+
 };
 
 

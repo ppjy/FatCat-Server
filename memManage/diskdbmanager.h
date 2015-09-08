@@ -153,7 +153,7 @@ public:
      hf_int32 GetPlayerMoney(umap_roleMoney playerMoney, const hf_char* str);
 
      //查询玩家物品
-     hf_int32 GetPlayerGoods(umap_roleGoods playerGoods, const hf_char* str);
+     hf_int32 GetPlayerGoods(umap_roleGoods playerGoods, umap_roleEqu playerEqu, const hf_char* str);
 
      //查询玩家装备属性
      hf_int32 GetPlayerEqu(umap_roleEqu playerEqu, const hf_char* str);
@@ -168,6 +168,9 @@ public:
      hf_int32 GetGoodsPrice(umap_goodsPrice goodsPrice, const hf_char* str);
      //查询装备属性
      hf_uint32 GetEquAttr(umap_equAttr* equAttr, const hf_char* str);
+
+     //查询数据库中装备现在的最大值
+     hf_uint32 GetEquIDMaxValue();
 private:
 
     PGconn *m_PGconn;

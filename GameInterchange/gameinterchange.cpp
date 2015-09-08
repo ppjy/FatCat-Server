@@ -4,6 +4,7 @@
 #include "Game/log.hpp"
 #include "server.h"
 #include "OperationPostgres/operationpostgres.h"
+#include "GameTask/gametask.h"
 
 #define Result_Accept 1        //接受交易
 #define Result_Reject 2         //拒绝交易
@@ -171,23 +172,44 @@ void GameInterchange::operChanges(TCPConnection::Pointer conn, interchangeOperGo
     Server* srv = Server::GetInstance();
 
     SessionMgr::SessionPointer sp = SessionMgr::Instance()->GetSession();
-    _umap_roleGoods::iterator iterRoleGoods = (*sp)[conn].m_playerGoods->find(oper->goodsId);
-    if(iterRoleGoods == (*sp)[conn].m_playerGoods->end())            //玩家选择的物品在服务器中不存在属于异常情况，忽略异常情况，服务器不做响应
+
+    if(oper->goodsId>=min_EquipMentId && oper->goodsId <=max_EquipMentId)
     {
-        return;
-    }
-    vector<STR_Goods>::iterator iterGoods = iterRoleGoods->second.begin();
-    for(; iterGoods != iterRoleGoods->second.end(); ++iterGoods)
-    {
-        if(iterGoods->Position == oper->position&&iterGoods->Count == oper->goodsCount) //位置信息和数量同时对应，则是找到玩家选择的物品
+        _umap_roleEqu::iterator iterRoleGoods = (*sp)[conn].m_playerEqu->find(oper->goodsId);
+        if(iterRoleGoods == (*sp)[conn].m_playerEqu->end())            //玩家选择的物品在服务器中不存在属于异常情况，忽略异常情况，服务器不做响应
+        {
+            return;
+        }
+
+        if(iterRoleGoods->second.goods.Position == oper->position&&iterRoleGoods->second.goods.Count == oper->goodsCount) //位置信息和数量同时对应，则是找到玩家选择的物品
         {
             (*sp)[conn].m_goodsPosition[oper->position] = POS_LOCKED;       //背包中找到该物品，则设定对该物品不能做其它操作
-            break;
+        }
+        else
+        {
+            return;
         }
     }
-    if(iterGoods == iterRoleGoods->second.end())                                    //背包中未找到该物品，属于异常情况，忽略异常情况
+    else
     {
-        return;
+        _umap_roleGoods::iterator iterRoleGoods = (*sp)[conn].m_playerGoods->find(oper->goodsId);
+        if(iterRoleGoods == (*sp)[conn].m_playerGoods->end())            //玩家选择的物品在服务器中不存在属于异常情况，忽略异常情况，服务器不做响应
+        {
+            return;
+        }
+        vector<STR_Goods>::iterator iterGoods = iterRoleGoods->second.begin();
+        for(; iterGoods != iterRoleGoods->second.end(); ++iterGoods)
+        {
+            if(iterGoods->Position == oper->position&&iterGoods->Count == oper->goodsCount) //位置信息和数量同时对应，则是找到玩家选择的物品
+            {
+                (*sp)[conn].m_goodsPosition[oper->position] = POS_LOCKED;       //背包中找到该物品，则设定对该物品不能做其它操作
+                break;
+            }
+        }
+        if(iterGoods == iterRoleGoods->second.end())                                    //背包中未找到该物品，属于异常情况，忽略异常情况
+        {
+            return;
+        }
     }
 
     boost::shared_ptr<Interchange> interchange = (*sp)[conn].m_interchage;
@@ -422,6 +444,16 @@ void GameInterchange::operProCheckChange(TCPConnection::Pointer conn,  interchan
     conn->Write_all((char*)&resp, sizeof(interchangeOperPro));
     partnerConn->Write_all((char*)&resp, sizeof(interchangeOperPro));
 
+    GameTask* t_task = srv->GetGameTask();
+    for(auto iter = interchange->changes.begin(); iter != interchange->changes.end();++iter)
+    {
+          t_task->UpdateCollectGoodsTaskProcess(conn,iter->GoodsID,iter->TypeID);
+    }
+    for(auto iter = pInterchange->changes.begin(); iter != pInterchange->changes.end();++iter)
+    {
+          t_task->UpdateCollectGoodsTaskProcess(conn,iter->GoodsID,iter->TypeID);
+    }
+
     interchange->clear();                          //交易完毕 恢复到原来状态
     pInterchange->clear();  //交易完毕 恢复到原来状态
 }
@@ -449,7 +481,7 @@ void GameInterchange::operDoChange(TCPConnection::Pointer conn)  //交换双方�
                 {
                     (*sp)[conn].m_goodsPosition[iter->Position] = POS_EMPTY;
                     opg->PushUpdateGoods(interchange->roleId,&(*iter),PostDelete);
-                    (*sp)[conn].m_playerGoods->erase(iter->GoodsID);
+//                    (*sp)[conn].m_playerGoods->erase(iter->GoodsID);
                     break;
                 }
 
@@ -482,7 +514,7 @@ void GameInterchange::operDoChange(TCPConnection::Pointer conn)  //交换双方�
 
                     (*sp)[partnerConn].m_goodsPosition[iter->Position] = POS_EMPTY;
                     opg->PushUpdateGoods(pInterchange->roleId,&(*iter),PostDelete);
-                    (*sp)[partnerConn].m_playerGoods->erase(iter->GoodsID);
+//                    (*sp)[partnerConn].m_playerGoods->erase(iter->GoodsID);
                     break;
                 }
                 opg->PushUpdateGoods(pInterchange->roleId,&(*iter),PostDelete);
@@ -528,13 +560,15 @@ void GameInterchange::operDoChange(TCPConnection::Pointer conn)  //交换双方�
 
         if(iter->GoodsID>=min_EquipMentId && iter->GoodsID <=max_EquipMentId)   //装备
         {
-            (*((*sp)[partnerConn].m_playerGoods))[iter->GoodsID] = vec;
-            STR_Equipment equip = (*((*sp)[conn].m_playerEquAttr))[iter->GoodsID];
-            interchange->vecEqui.push_back(equip);
-            (*((*sp)[partnerConn].m_playerEquAttr))[iter->GoodsID] = equip;
-            (*sp)[conn].m_playerEquAttr->erase(iter->GoodsID);
 
-            opg->PushUpdateEquAttr(pInterchange->roleId,&equip,PostUpdate);
+            STR_Equipment equAttr = (*((*sp)[conn].m_playerEqu))[iter->GoodsID].equAttr;
+            interchange->vecEqui.push_back(equAttr);
+            STR_PlayerEqu equ;
+            equ.goods = goods;
+            equ.equAttr = equAttr;
+            (*((*sp)[partnerConn].m_playerEqu))[iter->GoodsID]  = equ;
+            (*sp)[conn].m_playerEqu->erase(iter->GoodsID);
+            opg->PushUpdateEquAttr(pInterchange->roleId,&equAttr,PostUpdate);
             continue;
         }
 
@@ -575,12 +609,14 @@ void GameInterchange::operDoChange(TCPConnection::Pointer conn)  //交换双方�
 
         if(iter->GoodsID>=min_EquipMentId && iter->GoodsID <=max_EquipMentId)   //装备
         {
-            (*((*sp)[conn].m_playerGoods))[iter->GoodsID] = vec;
-            STR_Equipment equip = (*((*sp)[partnerConn].m_playerEquAttr))[iter->GoodsID];
-            (*((*sp)[conn].m_playerEquAttr))[iter->GoodsID] = equip;
-            pInterchange->vecEqui.push_back(equip);
-            (*sp)[partnerConn].m_playerEquAttr->erase(iter->GoodsID);
-            opg->PushUpdateEquAttr(interchange->roleId,&equip,PostUpdate);
+            STR_Equipment equAttr = (*((*sp)[partnerConn].m_playerEqu))[iter->GoodsID].equAttr;
+            pInterchange->vecEqui.push_back(equAttr);
+            STR_PlayerEqu equ;
+            equ.goods = goods;
+            equ.equAttr = equAttr;
+            (*((*sp)[conn].m_playerEqu))[iter->GoodsID] = equ;
+            (*sp)[partnerConn].m_playerEqu->erase(iter->GoodsID);
+            opg->PushUpdateEquAttr(interchange->roleId,&equAttr,PostUpdate);
             continue;
         }
 

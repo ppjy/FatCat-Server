@@ -70,22 +70,31 @@ typedef struct _STR_PackTaskDescription
     }
 }STR_PackTaskDescription;
 
-//5.任务目标数据
-typedef struct _STR_PackTaskAim
+
+typedef struct _STR_TaskAim
 {
-    STR_PackHead        head;
     hf_uint32 TaskID;
     hf_uint32 AimID;              //任务目标ID
     hf_uint32 Amount;             //任务数量ID
     hf_uint8  ExeModeID;          //执行方式ID
+}STR_TaskAim;
 
-    _STR_PackTaskAim()
-    {
-        bzero(&head,sizeof(_STR_PackTaskAim));
-        head.Flag = /*htons*/(FLAG_TaskAim);
-        head.Len = /*htons*/(sizeof(_STR_PackTaskAim)-sizeof(STR_PackHead));
-    }
-}STR_PackTaskAim;
+////5.任务目标数据
+//typedef struct _STR_PackTaskAim
+//{
+//    STR_PackHead        head;
+//    hf_uint32 TaskID;
+//    hf_uint32 AimID;              //任务目标ID
+//    hf_uint32 Amount;             //任务数量ID
+//    hf_uint8  ExeModeID;          //执行方式ID
+
+//    _STR_PackTaskAim()
+//    {
+//        bzero(&head,sizeof(_STR_PackTaskAim));
+//        head.Flag = /*htons*/(FLAG_TaskAim);
+//        head.Len = /*htons*/(sizeof(_STR_PackTaskAim)-sizeof(STR_PackHead));
+//    }
+//}STR_PackTaskAim;
 
 //6.任务奖励数据
 typedef struct _STR_PackTaskReward
@@ -169,12 +178,13 @@ typedef struct _STR_PackFinishTaskResult
     _STR_PackFinishTaskResult()
     {
         bzero(&head, sizeof(_STR_PackFinishTaskResult));
-        head.Flag = FLAG_FinishTask;
+        head.Flag = FLAG_UserTaskResult;
         head.Len = sizeof(_STR_PackFinishTaskResult) - sizeof(STR_PackHead);
     }
 
     STR_PackHead head;
     hf_uint32 TaskID;
+    hf_uint8  Result;   //结果 1 成功,0 失败
 }STR_PackFinishTaskResult;
 
 //放弃任务 2015.05.06
@@ -189,26 +199,6 @@ typedef struct _STR_PackQuitTask
         head.Len = /*htons*/(sizeof(_STR_PackQuitTask)-sizeof(STR_PackHead));
     }
 }STR_PackQuitTask;
-
-//12.玩家任务结果数据
-/*result
- * 0 成功
- * 1 失败，请选择奖励
- * 2 失败，奖励物品不符合
- */
-typedef struct _STR_PackUserTaskResult
-{
-    STR_PackHead        head;
-    hf_uint32           TaskID;
-    hf_uint8            Result;    //根据Result值判断成功或者失败原因
-
-    _STR_PackUserTaskResult()
-    {
-        bzero(&head,sizeof(_STR_PackUserTaskResult));
-        head.Flag = /*htons*/(FLAG_UserTaskResult);
-        head.Len = /*htons*/(sizeof(_STR_PackUserTaskResult)-sizeof(STR_PackHead));
-    }
-}STR_PackUserTaskResult;
 
 
 //13，怪物信息数据
@@ -435,7 +425,7 @@ typedef struct _STR_GoodsPrice
 typedef struct _STR_PickGoods
 {
     hf_uint32 LootGoodsID; //物品ID
-    hf_uint32 GoodsFlag;   //掉落者
+    hf_uint32 GoodsFlag;   //掉落者 怪物ID
 }STR_PickGoods;
 
 //19.玩家捡取物品结果数据包
@@ -472,8 +462,20 @@ typedef struct _STR_Goods
     hf_uint16 Count;     //数量
     hf_uint8  Position;  //位置
     hf_uint8  Source;    //来源  0 固有物品，1 来自交易，2 买的物品，3 捡的物品
-
 }STR_Goods;
+
+typedef struct _STR_PackGoods
+{
+    _STR_PackGoods(STR_Goods* _goods)
+    {
+        head.Flag = FLAG_BagGoods;
+        head.Len = sizeof(_STR_PackGoods) - sizeof(STR_PackHead);
+        memcpy(&goods, _goods, sizeof(STR_Goods));
+    }
+
+    STR_PackHead head;
+    STR_Goods    goods;
+}STR_PackGoods;
 
 //玩家装备属性数据包
 typedef struct _STR_Equipment
@@ -489,12 +491,37 @@ typedef struct _STR_Equipment
     hf_uint8  Durability;         //耐久度
 }STR_Equipment;
 
+//玩家装备信息
+typedef struct _STR_PlayerEqu
+{
+    _STR_PlayerEqu()
+    {
+        memset(&goods, 0, sizeof(_STR_PlayerEqu));
+    }
+
+    STR_Goods goods;
+    STR_Equipment equAttr;
+}STR_PlayerEqu;
+
 //玩家金币
 typedef struct _STR_PlayerMoney
 {
     hf_uint32 Count;    //数量
     hf_uint8  TypeID;   //类型
 }STR_PlayerMoney;
+
+typedef struct _STR_PackPlayerMoney
+{
+    _STR_PackPlayerMoney(STR_PlayerMoney* _money)
+    {
+        head.Flag = FLAG_PlayerMoney;
+        head.Len = sizeof(_STR_PackPlayerMoney) - sizeof(STR_PackHead);
+        memcpy(&money, _money, sizeof(STR_PlayerMoney));
+    }
+
+    STR_PackHead head;
+    STR_PlayerMoney money;
+}STR_PackPlayerMoney;
 
 //玩家位置
 typedef struct _STR_PackPlayerPosition
@@ -546,12 +573,12 @@ typedef struct _STR_PackOtherPlayerPosition
 }STR_PackOtherPlayerPosition;
 
 //玩家刷新数据起始点
-typedef struct _PlayerStartPos
+typedef struct _STR_PlayerStartPos
 {
     hf_float Pos_x;
     hf_float Pos_y;
     hf_float Pos_z;
-}PlayerStartPos;
+}STR_PlayerStartPos;
 
 //玩家移动包
 typedef struct _STR_PlayerMove
@@ -921,24 +948,24 @@ typedef struct _STR_TaskProcess
 {
     hf_uint32  TaskID;
     hf_uint32  AimID;             //任务目标
-    hf_uint16  AimCount;          //已完成任务目标数量
+    hf_uint16  FinishCount;       //已完成任务目标数量
     hf_uint16  AimAmount;         //任务目标总数
     hf_uint8   ExeModeID;         //执行方式
 }STR_TaskProcess;
 
 //玩家角色单个任务进度数据
-typedef struct _STR_PackTaskProcess
-{
-    STR_PackHead        head;
-    STR_TaskProcess       TaskProcess;
+//typedef struct _STR_PackTaskProcess
+//{
+//    STR_PackHead        head;
+//    STR_TaskProcess       TaskProcess;
 
-    _STR_PackTaskProcess()
-    {
-        bzero(&head,sizeof(_STR_PackTaskProcess));
-        head.Flag = /*htons*/(FLAG_TaskProcess);
-        head.Len = /*htons*/(sizeof(_STR_PackTaskProcess)-sizeof(STR_PackHead));
-    }
-}STR_PackTaskProcess;
+//    _STR_PackTaskProcess()
+//    {
+//        bzero(&head,sizeof(_STR_PackTaskProcess));
+//        head.Flag = /*htons*/(FLAG_TaskProcess);
+//        head.Len = /*htons*/(sizeof(_STR_PackTaskProcess)-sizeof(STR_PackHead));
+//    }
+//}STR_PackTaskProcess;
 //角色信息
 typedef struct _STR_RoleInfo
 {
@@ -1234,6 +1261,11 @@ typedef struct _UpdateMoney             //更新金钱
     {
         memcpy(&Money, money, sizeof(STR_PlayerMoney));
     }
+    _UpdateMoney()
+    {
+
+    }
+
     hf_uint32 RoleID;
     STR_PlayerMoney Money;
 }UpdateMoney;
@@ -1244,6 +1276,10 @@ typedef struct _UpdateLevel             //更新等级
         :RoleID(roleid),Level(level)
     {
     }
+    _UpdateLevel()
+    {
+
+    }
     hf_uint32 RoleID;
     hf_uint8  Level;
 }UpdateLevel;
@@ -1252,6 +1288,9 @@ typedef struct _UpdateExp              //更新经验
 {
     _UpdateExp(hf_uint32 roleid, hf_uint32 exp)
         :RoleID(roleid),Exp(exp)
+    {
+    }
+    _UpdateExp()
     {
     }
     hf_uint32 RoleID;
@@ -1264,6 +1303,9 @@ typedef struct _UpdateGoods            //更新背包某位置的物品
         :RoleID(roleid), Operate(operate)
     {
         memcpy(&Goods, goods, sizeof(STR_Goods));
+    }
+    _UpdateGoods()
+    {
     }
     hf_uint32 RoleID;
     STR_Goods Goods;
@@ -1279,6 +1321,9 @@ typedef struct _UpdateEquAttr        //更新某装备的属性
     {
         memcpy(&EquAttr, equ, sizeof(STR_Equipment));
     }
+    _UpdateEquAttr()
+    {
+    }
     hf_uint32 RoleID;
     STR_Equipment EquAttr;
     hf_uint8  Operate;
@@ -1291,6 +1336,9 @@ typedef struct _UpdateTask         //更新任务进度
         :RoleID(roleid),Operate(operate)
     {
         memcpy(&TaskProcess, task, sizeof(STR_TaskProcess));
+    }
+    _UpdateTask()
+    {
     }
     hf_uint32     RoleID;
     STR_TaskProcess TaskProcess;
@@ -1337,10 +1385,10 @@ enum taskFinishMode
 //任务执行方式
 enum TaskExeMode
 {
-    EXE_attack_blame = 1,       // 打怪
+    EXE_attack_monster = 1,     //打怪
     EXE_dialogue,               //对话
-    EXE_collect_items,          //收集物品
-    EXE_use_items,              //使用物品
+    EXE_collect_goods,          //收集物品
+    EXE_use_goods,              //使用物品
     EXE_escort,                 //护送
     EXE_upgrade,                //升级
     EXE_choice,                 //选择
