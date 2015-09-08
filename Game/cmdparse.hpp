@@ -333,6 +333,11 @@ void CommandParse(TCPConnection::Pointer conn , void *reg)
                 srv->RunTask(boost::bind(&GameInterchange::operProCancelChange, t_gameInterchange, conn, t_OperPro));
                 break;
             }
+            case Interchange_CancelRequest:
+            {
+                srv->RunTask(boost::bind(&GameInterchange::operProCancelRequest, t_gameInterchange, conn, t_OperPro));
+                break;
+            }
             default:
                 break;
         }

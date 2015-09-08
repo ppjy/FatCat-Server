@@ -71,6 +71,11 @@ void GameInterchange::operRequest(TCPConnection::Pointer conn, operationRequest*
 
     (*sp)[conn].m_interchage->goInChange();          //进入交易状态
     (*sp)[partnerConn].m_interchage->goInChange();          //服务器设定对方也进入交易状态 ，避免竞争
+    (*sp)[conn].m_interchage->roleId = (*sp)[conn].m_roleid;  //保存自己的角色id
+    (*sp)[partnerConn].m_interchage->roleId = (*sp)[partnerConn].m_roleid;  //对方保存自己的角色id
+    (*sp)[conn].m_interchage->partnerConn = partnerConn; //互相保存对方的连接
+    (*sp)[partnerConn].m_interchage->partnerConn = conn;  //互相保存对方的连接
+
     operReq->RoleID =  (*sp)[conn].m_roleid;                        // 向对方转发请求
     partnerConn->Write_all((char*)operReq, sizeof(operationRequest));
     srv->free(operReq);
@@ -102,10 +107,10 @@ void GameInterchange::operResponse(TCPConnection::Pointer conn,  operationReques
 
     if(operReq->operResult == Result_Accept)                                                                                   //如果答复同意交易，则设置交易标志
     {
-        (*sp)[conn].m_interchage->roleId = (*sp)[conn].m_roleid;  //保存自己的角色id
-        (*sp)[partnerConn].m_interchage->roleId = (*sp)[partnerConn].m_roleid;  //对方保存自己的角色id
-        (*sp)[conn].m_interchage->partnerConn = partnerConn; //互相保存对方的连接
-        (*sp)[partnerConn].m_interchage->partnerConn = conn;  //互相保存对方的连接
+//        (*sp)[conn].m_interchage->roleId = (*sp)[conn].m_roleid;  //保存自己的角色id
+//        (*sp)[partnerConn].m_interchage->roleId = (*sp)[partnerConn].m_roleid;  //对方保存自己的角色id
+//        (*sp)[conn].m_interchage->partnerConn = partnerConn; //互相保存对方的连接
+//        (*sp)[partnerConn].m_interchage->partnerConn = conn;  //互相保存对方的连接
     }
     else if(operReq->operResult == Result_Reject || operReq->operResult == Result_RejectTimeOut)                           //拒绝
     {
@@ -820,6 +825,32 @@ void GameInterchange::operProCancelChange(TCPConnection::Pointer conn,interchang
     {
         (*sp)[partnerConn].m_goodsPosition[iter->Position] = POS_NONEMPTY;
     }
+    interchange->clear();           //清除交易状态
+    pInterchange->clear();             //对方清除交易状态
+    srv->free(oper);
+}
+
+void GameInterchange::operProCancelRequest(TCPConnection::Pointer conn,interchangeOperPro*  oper)
+{
+
+    Server* srv = Server::GetInstance();
+    SessionMgr::SessionPointer sp = SessionMgr::Instance()->GetSession();
+    boost::shared_ptr<Interchange> interchange = (*sp)[conn].m_interchage;
+    TCPConnection::Pointer partnerConn = interchange->partnerConn;
+
+    auto iter = sp->find(partnerConn);
+
+    if(iter == sp->end())    //对方离线
+    {
+        interchange->clear();           //清除交易状态
+        srv->free(oper);
+        return;
+    }
+
+    //对方在线
+    boost::shared_ptr<Interchange> pInterchange = (*sp)[partnerConn].m_interchage;
+    partnerConn->Write_all((char*)oper, sizeof(interchangeOperPro));   //转发取消交易的包
+
     interchange->clear();           //清除交易状态
     pInterchange->clear();             //对方清除交易状态
     srv->free(oper);
